@@ -1,0 +1,55 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id   Int       @id @default(autoincrement()) @map("id")
+  username String    @unique @db.VarChar(50)
+  password String    @db.VarChar(255)
+  todos    Todo[]
+  categories Category[]
+
+  @@map("user")
+}
+
+model Todo {
+  id    Int       @id @default(autoincrement()) @map("id")
+  title     String    @map("title") @db.VarChar(255)
+  dueDate   DateTime?  @map("due_date") @db.Timestamp
+  priority  Priority   @map("priority") @default(MEDIUM)
+  completed Boolean    @map("completed") @default(false)
+  categoryId Int?      @map("category_id")
+  userId    Int       @map("user_id")
+  createdAt DateTime  @default(now()) @map("create_date") @db.Timestamp
+  updatedAt DateTime  @default(now()) @map("update_date") @db.Timestamp
+  User      User      @relation(fields: [userId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  Category  Category? @relation(fields: [categoryId], references: [id], onUpdate: Cascade, onDelete: SetNull)
+
+  @@map("todo")
+}
+
+model Category {
+  id Int      @id @default(autoincrement()) @map("id")
+  name String   @map("name") @db.VarChar(50)
+  userId Int   @map("user_id")
+  User User   @relation(fields: [userId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  Todo Todo[]
+
+  @@map("category")
+}
+
+enum Priority {
+  HIGH    @map("high")
+  MEDIUM  @map("medium")
+  LOW     @map("low")
+
+  @@map("priority")
+}
